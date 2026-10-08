@@ -35,8 +35,6 @@ export default component App() {
       />
 
       <aside className="panel">
-        <h1>Spiral Explorer</h1>
-
         <dl>
           <dt>Layout</dt>
           <dd>Ulam spiral</dd>
