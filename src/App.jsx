@@ -86,7 +86,7 @@ export default component App() {
           ? `n = ${hovered}  (${hoveredCell.x}, ${hoveredCell.y})  ${
               isPrime(hovered) ? 'prime' : 'not prime'
             }`
-          : 'Drag to pan · Scroll to zoom'}
+          : 'Drag or arrow keys to pan · Scroll to zoom'}
       </footer>
     </div>
   );
