@@ -1,50 +1,36 @@
 /* @flow strict-local */
 
-import {useMemo, useState} from 'react';
+import {useCallback, useState} from 'react';
 
-import type {View} from './SpiralCanvas.jsx';
+import type {View} from './view.js';
 
-import {sievePrimes} from './primes.js';
-import SpiralCanvas, {clampScale} from './SpiralCanvas.jsx';
+import {isPrime} from './primes.js';
+import SpiralCanvas from './SpiralCanvas.jsx';
 import {ulamPosition} from './ulam.js';
+import {clampView} from './view.js';
 
-const MAX_COUNT = 2_000_000;
-const DEFAULT_COUNT = 40_000;
 const DEFAULT_VIEW: View = {x: 0, y: 0, scale: 3};
 const ZOOM_STEP = 1.5;
 
-const clampCount = (value: number): number =>
-  Number.isFinite(value)
-    ? Math.min(MAX_COUNT, Math.max(1, Math.floor(value)))
-    : 1;
-
 export default component App() {
-  const [count, setCount] = useState(DEFAULT_COUNT);
   const [view, setView] = useState(DEFAULT_VIEW);
   const [hovered, setHovered] = useState<number | null>(null);
 
-  const primes = useMemo(() => sievePrimes(count), [count]);
-  const primeCount = useMemo(
-    () => primes.reduce((total, flag) => total + flag, 0),
-    [primes],
+  const updateView = useCallback(
+    (update: View => View) => setView(current => clampView(update(current))),
+    [],
   );
 
   const zoomBy = (factor: number) =>
-    setView(current => ({
-      ...current,
-      scale: clampScale(current.scale * factor),
-    }));
+    updateView(current => ({...current, scale: current.scale * factor}));
 
-  const hoveredCell =
-    hovered != null && hovered <= count ? ulamPosition(hovered) : null;
+  const hoveredCell = hovered == null ? null : ulamPosition(hovered);
 
   return (
     <div className="app">
       <SpiralCanvas
-        count={count}
-        highlighted={primes}
         view={view}
-        onViewChange={setView}
+        onViewChange={updateView}
         onHover={setHovered}
       />
 
@@ -57,20 +43,6 @@ export default component App() {
           <dt>Highlight</dt>
           <dd>Prime numbers</dd>
         </dl>
-
-        <label>
-          Numbers 1 to
-          <input
-            type="number"
-            min="1"
-            max={MAX_COUNT}
-            step="1000"
-            value={count}
-            onChange={event =>
-              setCount(clampCount(event.currentTarget.valueAsNumber))
-            }
-          />
-        </label>
 
         <div className="zoom">
           <button
@@ -95,9 +67,9 @@ export default component App() {
       <footer className="readout">
         {hovered != null && hoveredCell != null
           ? `n = ${hovered}  (${hoveredCell.x}, ${hoveredCell.y})  ${
-              primes[hovered] === 1 ? 'prime' : 'not prime'
+              isPrime(hovered) ? 'prime' : 'not prime'
             }`
-          : `${primeCount} primes up to ${count}`}
+          : 'Drag to pan · Scroll to zoom'}
       </footer>
     </div>
   );

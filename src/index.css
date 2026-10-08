@@ -46,7 +46,7 @@ body {
 .readout {
   position: absolute;
   border: 1px solid var(--ink);
-  background: rgb(255 255 255 / 0.92);
+  background: var(--paper);
 }
 
 .panel {
@@ -54,7 +54,7 @@ body {
   right: 12px;
   display: grid;
   gap: 10px;
-  width: 196px;
+  width: 216px;
   padding: 12px;
 }
 
@@ -74,8 +74,7 @@ dl {
   border-top: 1px solid var(--line);
 }
 
-dt,
-label {
+dt {
   color: var(--muted);
 }
 
@@ -84,24 +83,10 @@ dd {
   text-align: right;
 }
 
-label {
-  display: grid;
-  gap: 4px;
-}
-
-input,
 button,
 output {
   font: inherit;
   color: var(--ink);
-}
-
-input[type='number'] {
-  width: 100%;
-  padding: 4px 6px;
-  border: 1px solid var(--ink);
-  border-radius: 0;
-  background: var(--paper);
 }
 
 .zoom {
@@ -113,6 +98,7 @@ input[type='number'] {
 
 output {
   text-align: center;
+  white-space: nowrap;
 }
 
 button {
@@ -129,7 +115,6 @@ button:active {
   color: var(--paper);
 }
 
-input:focus-visible,
 button:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 1px;
