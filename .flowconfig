@@ -1,5 +1,7 @@
 [ignore]
 dist/**
+; Typed by flow-typed/react-dom.js instead.
+node_modules/react-dom/**
 
 [declarations]
 node_modules/**
@@ -10,6 +12,8 @@ all=warn
 [options]
 all=true
 enums=false
+react.runtime=automatic
+module.name_mapper.extension='css' -> '<PROJECT_ROOT>/flow-stubs/style.js'
 
 [strict]
 nonstrict-import

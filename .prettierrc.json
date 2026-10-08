@@ -1,5 +1,7 @@
 {
   "singleQuote": true,
   "bracketSpacing": false,
-  "overrides": [{"files": "*.js", "options": {"parser": "flow"}}]
+  "bracketSameLine": true,
+  "arrowParens": "avoid",
+  "overrides": [{"files": ["*.js", "*.jsx"], "options": {"parser": "flow"}}]
 }
