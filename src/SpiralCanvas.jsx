@@ -2,10 +2,10 @@
 
 import {useEffect, useRef, useState} from 'react';
 
+import type {Layout} from './layout.js';
 import type {View} from './view.js';
 
 import {renderTile, TILE_SIZE} from './tiles.js';
-import {ulamNumberAt} from './ulam.js';
 
 const WHEEL_ZOOM_RATE = 0.0015;
 
@@ -123,6 +123,7 @@ function paint(
 }
 
 export default component SpiralCanvas(
+  layout: Layout,
   view: View,
   onViewChange: (update: (View) => View) => void,
   onHover: (n: number | null) => void,
@@ -146,7 +147,7 @@ export default component SpiralCanvas(
   }, []);
 
   // The paint loop outlives view changes, so tiles keep loading while the
-  // view is still moving.
+  // view is still moving. A new layout starts over with an empty tile cache.
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
@@ -170,7 +171,7 @@ export default component SpiralCanvas(
       }
       const deadline = performance.now() + TILE_BUDGET_MS;
       for (const {tileX, tileY} of missing) {
-        tiles.set(tileKey(tileX, tileY), renderTile(tileX, tileY));
+        tiles.set(tileKey(tileX, tileY), renderTile(layout, tileX, tileY));
         if (performance.now() >= deadline) {
           break;
         }
@@ -183,12 +184,12 @@ export default component SpiralCanvas(
       cancelAnimationFrame(frame);
       requestPaintRef.current = () => {};
     };
-  }, []);
+  }, [layout]);
 
   useEffect(() => {
     viewRef.current = view;
     requestPaintRef.current();
-  }, [view, resizes]);
+  }, [view, resizes, layout]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -235,7 +236,7 @@ export default component SpiralCanvas(
       const {dx, dy} = fromCenter(event);
       const {x, y, scale} = viewRef.current;
       onHover(
-        ulamNumberAt(Math.round(x + dx / scale), Math.round(y - dy / scale)),
+        layout.numberAt(Math.round(x + dx / scale), Math.round(y - dy / scale)),
       );
     };
 
@@ -251,7 +252,7 @@ export default component SpiralCanvas(
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerleave', onPointerLeave);
     };
-  }, [onViewChange, onHover]);
+  }, [layout, onViewChange, onHover]);
 
   return <canvas ref={canvasRef} className="spiral-canvas" />;
 }

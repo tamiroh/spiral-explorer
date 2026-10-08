@@ -2,17 +2,19 @@
 
 import {useCallback, useState} from 'react';
 
+import type {Layout} from './layout.js';
 import type {View} from './view.js';
 
+import {LAYOUTS} from './layouts.js';
 import {isPrime} from './primes.js';
 import SpiralCanvas from './SpiralCanvas.jsx';
-import {ulamPosition} from './ulam.js';
 import {clampView} from './view.js';
 
 const DEFAULT_VIEW: View = {x: 0, y: 0, scale: 3};
 const ZOOM_STEP = 1.5;
 
 export default component App() {
+  const [layout, setLayout] = useState<Layout>(LAYOUTS[0]);
   const [view, setView] = useState(DEFAULT_VIEW);
   const [hovered, setHovered] = useState<number | null>(null);
 
@@ -24,11 +26,12 @@ export default component App() {
   const zoomBy = (factor: number) =>
     updateView(current => ({...current, scale: current.scale * factor}));
 
-  const hoveredCell = hovered == null ? null : ulamPosition(hovered);
+  const hoveredCell = hovered == null ? null : layout.position(hovered);
 
   return (
     <div className="app">
       <SpiralCanvas
+        layout={layout}
         view={view}
         onViewChange={updateView}
         onHover={setHovered}
@@ -37,7 +40,23 @@ export default component App() {
       <aside className="panel">
         <dl>
           <dt>Layout</dt>
-          <dd>Ulam spiral</dd>
+          <dd>
+            <select
+              aria-label="Layout"
+              value={layout.id}
+              onChange={event => {
+                const {value} = event.currentTarget;
+                setLayout(
+                  current => LAYOUTS.find(l => l.id === value) ?? current,
+                );
+              }}>
+              {LAYOUTS.map(({id, name}) => (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </dd>
           <dt>Highlight</dt>
           <dd>Prime numbers</dd>
         </dl>

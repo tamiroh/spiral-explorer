@@ -1,12 +1,12 @@
 /* @flow strict */
 
-export type Cell = {readonly x: number, readonly y: number};
+import type {Cell, Layout, Rect, RunCallback} from './layout.js';
 
 // The Ulam spiral puts 1 at the origin, 2 to its right, and winds
 // counterclockwise with y pointing up. Ring k ends at (2k + 1)^2 in the
 // bottom-right corner (k, -k), and each of its four sides holds 2k numbers.
 
-export function ulamPosition(n: number): Cell {
+function position(n: number): Cell {
   const k = Math.ceil((Math.sqrt(n) - 1) / 2);
   const side = 2 * k;
   const offset = (side + 1) ** 2 - n;
@@ -22,7 +22,7 @@ export function ulamPosition(n: number): Cell {
   return {x: k, y: k - (offset - 3 * side)};
 }
 
-export function ulamNumberAt(x: number, y: number): number {
+function numberAt(x: number, y: number): number {
   const k = Math.max(Math.abs(x), Math.abs(y));
   const side = 2 * k;
   const last = (side + 1) ** 2;
@@ -38,27 +38,7 @@ export function ulamNumberAt(x: number, y: number): number {
   return last - 3 * side - (k - y);
 }
 
-export type Rect = {
-  readonly x0: number,
-  readonly y0: number,
-  readonly x1: number,
-  readonly y1: number,
-};
-
-// Splits the cells inside `rect` (bounds inclusive) into runs of consecutive
-// numbers: `start` sits at (x, y) and each following number is one (dx, dy)
-// step further. Every cell is reported exactly once.
-export function forEachUlamRun(
-  rect: Rect,
-  callback: (
-    start: number,
-    length: number,
-    x: number,
-    y: number,
-    dx: number,
-    dy: number,
-  ) => void,
-): void {
+function forEachRun(rect: Rect, callback: RunCallback): void {
   const {x0, y0, x1, y1} = rect;
   const emit = (
     xa: number,
@@ -71,7 +51,7 @@ export function forEachUlamRun(
     if (xa <= xb && ya <= yb) {
       const x = dx < 0 ? xb : xa;
       const y = dy < 0 ? yb : ya;
-      callback(ulamNumberAt(x, y), xb - xa + yb - ya + 1, x, y, dx, dy);
+      callback(numberAt(x, y), xb - xa + yb - ya + 1, x, y, dx, dy);
     }
   };
 
@@ -97,3 +77,11 @@ export function forEachUlamRun(
     }
   }
 }
+
+export const ulam: Layout = {
+  id: 'ulam',
+  name: 'Ulam spiral',
+  position,
+  numberAt,
+  forEachRun,
+};
