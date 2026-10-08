@@ -1,0 +1,33 @@
+{
+  "name": "spiral-explorer",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "scripts": {
+    "flow": "flow",
+    "typecheck": "flow check",
+    "build": "babel src --out-dir dist",
+    "start": "npm run build && node dist/index.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run typecheck && npm run lint && npm run format:check"
+  },
+  "devDependencies": {
+    "@babel/cli": "^8.0.6",
+    "@babel/core": "^8.0.7",
+    "@babel/preset-flow": "^8.0.1",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "flow-bin": "^0.334.0",
+    "flow-eslint": "^0.334.0",
+    "flow-parser": "^0.334.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.9"
+  }
+}
