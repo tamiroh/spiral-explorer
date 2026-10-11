@@ -17,7 +17,6 @@ function primesUpTo(limit: number): Array<number> {
 const BASE_LIMIT = 2 ** 22;
 const BASE_PRIMES = primesUpTo(BASE_LIMIT);
 
-
 export const MAX_NUMBER: number = BASE_LIMIT ** 2;
 
 export function primesInRange(start: number, length: number): Uint8Array {
