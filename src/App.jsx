@@ -166,7 +166,7 @@ function tileMarks(pattern: Pattern, tileX: number, tileY: number): Uint8Array {
         after++;
       }
 
-      const flags = pattern.inRange(n - before, before + after + 1);
+      const flags = pattern.marks(n - before, before + after + 1);
       for (let i = -before; i <= after; i++) {
         const cell = (row + i * dy) * TILE_SIZE + column + i * dx;
         assigned[cell] = 1;

@@ -11,17 +11,14 @@ export type Cell = {readonly x: number, readonly y: number};
 export type Pattern = {
   readonly id: string,
   readonly name: string,
-  // Describes a single number that is marked, as in "not prime".
   readonly label: string,
   readonly position: (n: number) => Cell,
   readonly numberAt: (x: number, y: number) => number,
-  // Tests start..start + length - 1 at once: the result holds 1 at index i
-  // when start + i is marked.
-  readonly inRange: (start: number, length: number) => Uint8Array,
+  readonly marks: (start: number, length: number) => Uint8Array,
 };
 
 export const isMarked = (pattern: Pattern, n: number): boolean =>
-  pattern.inRange(n, 1)[0] === 1;
+  pattern.marks(n, 1)[0] === 1;
 
 // -----------------------------------------------------------------------------
 // Ulam spiral
@@ -88,7 +85,7 @@ const ulam: Pattern = {
     return last - 3 * side - (k - y);
   },
 
-  inRange(start, length) {
+  marks(start, length) {
     const end = start + length - 1;
     if (end > MAX_PRIME_CANDIDATE) {
       throw new RangeError(`Cannot test numbers above ${MAX_PRIME_CANDIDATE}`);
