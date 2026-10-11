@@ -3,14 +3,13 @@
 import {useEffect, useRef, useState} from 'react';
 
 import type {Layout} from './layouts.js';
-import type {View} from './view.js';
+import type {View} from './useViewControls.js';
 
 import {LAYOUTS} from './layouts.js';
 import {isPrime} from './primes.js';
 import styles from './App.module.css';
 import {renderTile, TILE_SIZE} from './tiles.js';
-import {useViewControls} from './useViewControls.js';
-import {CENTER, transformView} from './view.js';
+import {CENTER, transformView, useViewControls} from './useViewControls.js';
 
 const DEFAULT_VIEW: View = {x: 0, y: 0, scale: 3};
 const ZOOM_STEP = 1.5;
