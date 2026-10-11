@@ -5,10 +5,13 @@ import {useCallback, useState} from 'react';
 import type {Layout} from './layout.js';
 import type {View} from './view.js';
 
-import {LAYOUTS} from './layouts.js';
 import {isPrime} from './primes.js';
 import SpiralCanvas from './SpiralCanvas.jsx';
+import {ulam} from './ulam.js';
 import {clampView} from './view.js';
+
+// Every layout offered in the UI; the first one is the default.
+const LAYOUTS: Array<Layout> = [ulam];
 
 const DEFAULT_VIEW: View = {x: 0, y: 0, scale: 3};
 const ZOOM_STEP = 1.5;
