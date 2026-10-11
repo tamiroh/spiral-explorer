@@ -9,13 +9,15 @@ export type View = {
   readonly scale: number,
 };
 
-// -----------------------------------------------------------------------------
-// Tiles
-// -----------------------------------------------------------------------------
+type TileCache = Map<string, HTMLCanvasElement>;
+type TileCoordinate = {readonly tileX: number, readonly tileY: number};
 
 // Cells along one side of a tile.
 const TILE_SIZE = 256;
-
+const TILE_BUDGET_MS = 6;
+const SPARE_TILES = 128;
+const PAPER = '#ffffff';
+const PENDING = '#ededed';
 const DIRECTIONS = [
   [1, 0],
   [0, 1],
@@ -110,20 +112,6 @@ function renderTile(
   canvas.getContext('2d')?.putImageData(image, 0, 0);
   return canvas;
 }
-
-// -----------------------------------------------------------------------------
-// Painting
-// -----------------------------------------------------------------------------
-
-const TILE_BUDGET_MS = 6;
-
-const SPARE_TILES = 128;
-
-const PAPER = '#ffffff';
-const PENDING = '#ededed';
-
-type TileCache = Map<string, HTMLCanvasElement>;
-type TileCoordinate = {readonly tileX: number, readonly tileY: number};
 
 const tileKey = (tileX: number, tileY: number): string => `${tileX},${tileY}`;
 
@@ -222,10 +210,6 @@ function paint(
 
   return missing;
 }
-
-// -----------------------------------------------------------------------------
-// GridRenderer
-// -----------------------------------------------------------------------------
 
 export type GridRenderer = {
   readonly show: (pattern: Pattern, view: View) => void,

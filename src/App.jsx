@@ -11,20 +11,18 @@ import styles from './App.module.css';
 import {clamp, distance, midpoint} from './math.js';
 import {createGridRenderer} from './renderer.js';
 
-// -----------------------------------------------------------------------------
-// View
-// -----------------------------------------------------------------------------
-
 // A screen position in pixels, relative to the center of the viewport.
 type Offset = Vector;
 
 const CENTER: Offset = {x: 0, y: 0};
-
+const DEFAULT_VIEW: View = {x: 0, y: 0, scale: 3};
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 64;
-
 // Keeps every reachable number far below 2^53, where integers stay exact.
 const MAX_COORDINATE = 2 ** 20;
+const ZOOM_STEP = 1.5;
+const WHEEL_ZOOM_RATE = 0.0015;
+const KEY_PAN_PX = 48;
 
 const cellAt = (view: View, offset: Offset): Cell => ({
   x: Math.round(view.x + offset.x / view.scale),
@@ -54,21 +52,6 @@ const transformView = (
     scale,
   };
 };
-
-const DEFAULT_VIEW: View = {x: 0, y: 0, scale: 3};
-const ZOOM_STEP = 1.5;
-
-// -----------------------------------------------------------------------------
-// Input
-// -----------------------------------------------------------------------------
-
-const WHEEL_ZOOM_RATE = 0.0015;
-
-const KEY_PAN_PX = 48;
-
-// -----------------------------------------------------------------------------
-// App
-// -----------------------------------------------------------------------------
 
 export default component App() {
   const [pattern, setPattern] = useState<Pattern>(PATTERNS[0]);
