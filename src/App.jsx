@@ -327,8 +327,6 @@ export default component App() {
   const [hovered, setHovered] = useState<number | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  // Bumped on resize so the canvas is repainted at the new size.
-  const [resizes, setResizes] = useState(0);
 
   // Lets the paint loop and the input handlers read the current view.
   const viewRef = useRef(view);
@@ -339,7 +337,8 @@ export default component App() {
     if (canvas == null) {
       return;
     }
-    const observer = new ResizeObserver(() => setResizes(n => n + 1));
+    // Repaint at the new size.
+    const observer = new ResizeObserver(() => requestPaintRef.current());
     observer.observe(canvas);
     return () => observer.disconnect();
   }, []);
@@ -387,7 +386,7 @@ export default component App() {
   useEffect(() => {
     viewRef.current = view;
     requestPaintRef.current();
-  }, [view, resizes, pattern]);
+  }, [view, pattern]);
 
   // Pointer, wheel and keyboard input: drag or arrow keys to pan, wheel or
   // pinch to zoom, and hover to report the number under the pointer.
