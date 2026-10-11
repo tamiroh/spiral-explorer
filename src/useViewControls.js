@@ -5,6 +5,8 @@ import {useEffect, useRef} from 'react';
 import type {Cell, Layout} from './layout.js';
 import type {View} from './view.js';
 
+import {MAX_SCALE, MIN_SCALE} from './view.js';
+
 const WHEEL_ZOOM_RATE = 0.0015;
 
 // Screen distance covered by one arrow key press.
@@ -16,9 +18,36 @@ const ARROW_STEPS = new Map<string, Cell>([
   ['ArrowDown', {x: 0, y: -1}],
 ]);
 
+// A screen position in pixels, relative to the center of the canvas.
+type Offset = {readonly dx: number, readonly dy: number};
+
+const midpoint = (a: Offset, b: Offset): Offset => ({
+  dx: (a.dx + b.dx) / 2,
+  dy: (a.dy + b.dy) / 2,
+});
+
+const distance = (a: Offset, b: Offset): number =>
+  Math.hypot(a.dx - b.dx, a.dy - b.dy);
+
+// Scales the view by `factor`, as far as the zoom limits allow, while moving
+// the cell shown at `from` to `to`.
+const transformView = (
+  view: View,
+  from: Offset,
+  to: Offset,
+  factor: number,
+): View => {
+  const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, view.scale * factor));
+  return {
+    x: view.x + from.dx / view.scale - to.dx / scale,
+    y: view.y - from.dy / view.scale + to.dy / scale,
+    scale,
+  };
+};
+
 // Wires the pointer, wheel and keyboard input of `canvasRef` to the view:
-// drag or arrow keys to pan, wheel to zoom, and hover to report the number
-// under the pointer.
+// drag or arrow keys to pan, wheel or pinch to zoom, and hover to report the
+// number under the pointer.
 export hook useViewControls(
   canvasRef: {readonly current: HTMLCanvasElement | null},
   layout: Layout,
@@ -39,7 +68,7 @@ export hook useViewControls(
     }
 
     // Pointer position relative to the center of the canvas.
-    const fromCenter = (event: MouseEvent) => {
+    const fromCenter = (event: MouseEvent): Offset => {
       const rect = canvas.getBoundingClientRect();
       return {
         dx: event.clientX - rect.left - rect.width / 2,
@@ -47,37 +76,50 @@ export hook useViewControls(
       };
     };
 
+    // Last known position of every pointer that is pressed on the canvas.
+    const pressed = new Map<number, Offset>();
+
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
-      const {dx, dy} = fromCenter(event);
-      onViewChange(current => {
-        const scale = current.scale * Math.exp(-event.deltaY * WHEEL_ZOOM_RATE);
-        // Keep the cell under the pointer fixed while zooming.
-        return {
-          x: current.x + dx / current.scale - dx / scale,
-          y: current.y - dy / current.scale + dy / scale,
-          scale,
-        };
-      });
+      const offset = fromCenter(event);
+      const factor = Math.exp(-event.deltaY * WHEEL_ZOOM_RATE);
+      onViewChange(current => transformView(current, offset, offset, factor));
     };
 
     const onPointerDown = (event: PointerEvent) => {
       canvas.setPointerCapture(event.pointerId);
+      pressed.set(event.pointerId, fromCenter(event));
     };
 
+    const onPointerUp = (event: PointerEvent) => {
+      pressed.delete(event.pointerId);
+    };
+
+    // One pointer drags the view; two pinch it around their midpoint.
     const onPointerMove = (event: PointerEvent) => {
-      if (canvas.hasPointerCapture(event.pointerId)) {
-        const {movementX, movementY} = event;
-        onViewChange(current => ({
-          ...current,
-          x: current.x - movementX / current.scale,
-          y: current.y + movementY / current.scale,
-        }));
+      const offset = fromCenter(event);
+      const previous = pressed.get(event.pointerId);
+      if (previous != null) {
+        pressed.set(event.pointerId, offset);
+        const [other] = [...pressed]
+          .filter(([pointerId]) => pointerId !== event.pointerId)
+          .map(([, position]) => position);
+        if (other == null) {
+          onViewChange(current => transformView(current, previous, offset, 1));
+        } else if (pressed.size === 2) {
+          const from = midpoint(previous, other);
+          const to = midpoint(offset, other);
+          const factor =
+            distance(offset, other) / Math.max(distance(previous, other), 1);
+          onViewChange(current => transformView(current, from, to, factor));
+        }
       }
-      const {dx, dy} = fromCenter(event);
       const {x, y, scale} = viewRef.current;
       onHover(
-        layout.numberAt(Math.round(x + dx / scale), Math.round(y - dy / scale)),
+        layout.numberAt(
+          Math.round(x + offset.dx / scale),
+          Math.round(y - offset.dy / scale),
+        ),
       );
     };
 
@@ -100,6 +142,8 @@ export hook useViewControls(
     canvas.addEventListener('wheel', onWheel, {passive: false});
     canvas.addEventListener('pointerdown', onPointerDown);
     canvas.addEventListener('pointermove', onPointerMove);
+    canvas.addEventListener('pointerup', onPointerUp);
+    canvas.addEventListener('pointercancel', onPointerUp);
     canvas.addEventListener('pointerleave', onPointerLeave);
     window.addEventListener('keydown', onKeyDown);
     return () => {
@@ -107,6 +151,8 @@ export hook useViewControls(
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('pointerdown', onPointerDown);
       canvas.removeEventListener('pointermove', onPointerMove);
+      canvas.removeEventListener('pointerup', onPointerUp);
+      canvas.removeEventListener('pointercancel', onPointerUp);
       canvas.removeEventListener('pointerleave', onPointerLeave);
     };
   }, [canvasRef, layout, onViewChange, onHover]);
