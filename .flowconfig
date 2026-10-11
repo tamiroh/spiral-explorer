@@ -13,7 +13,6 @@ all=warn
 all=true
 enums=false
 react.runtime=automatic
-module.name_mapper.extension='css' -> '<PROJECT_ROOT>/flow-stubs/style.js'
 
 [strict]
 nonstrict-import
