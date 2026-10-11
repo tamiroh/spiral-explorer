@@ -99,17 +99,17 @@ export default component App() {
     if (canvas == null) {
       return;
     }
-    const renderer = createGridRenderer(canvas, pattern);
+    const renderer = createGridRenderer(canvas);
     rendererRef.current = renderer;
     return () => {
       renderer.dispose();
       rendererRef.current = null;
     };
-  }, [pattern]);
+  }, []);
 
   useEffect(() => {
-    rendererRef.current?.setView(view);
-  }, [view, pattern]);
+    rendererRef.current?.show(pattern, view);
+  }, [pattern, view]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

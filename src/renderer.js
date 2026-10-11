@@ -228,21 +228,18 @@ function paint(
 // -----------------------------------------------------------------------------
 
 export type GridRenderer = {
-  readonly setView: (view: View) => void,
+  readonly show: (pattern: Pattern, view: View) => void,
   readonly dispose: () => void,
 };
 
-export function createGridRenderer(
-  canvas: HTMLCanvasElement,
-  pattern: Pattern,
-): GridRenderer {
+export function createGridRenderer(canvas: HTMLCanvasElement): GridRenderer {
   const context = canvas.getContext('2d');
   if (context == null) {
     throw new Error('Canvas 2D is not available');
   }
   const tiles: TileCache = new Map();
-  // Nothing is painted until the first `setView`.
-  let view: View | null = null;
+  // Nothing is painted until the first `show`.
+  let scene: {readonly pattern: Pattern, readonly view: View} | null = null;
   let frame = 0;
 
   const requestPaint = () => {
@@ -253,13 +250,17 @@ export function createGridRenderer(
 
   const tick = () => {
     frame = 0;
-    const missing = view == null ? [] : paint(canvas, context, view, tiles);
+    const shown = scene;
+    if (shown == null) {
+      return;
+    }
+    const missing = paint(canvas, context, shown.view, tiles);
     if (missing.length === 0) {
       return;
     }
     const deadline = performance.now() + TILE_BUDGET_MS;
     for (const {tileX, tileY} of missing) {
-      tiles.set(tileKey(tileX, tileY), renderTile(pattern, tileX, tileY));
+      tiles.set(tileKey(tileX, tileY), renderTile(shown.pattern, tileX, tileY));
       if (performance.now() >= deadline) {
         break;
       }
@@ -269,11 +270,13 @@ export function createGridRenderer(
 
   const observer = new ResizeObserver(requestPaint);
   observer.observe(canvas);
-  requestPaint();
 
   return {
-    setView(next) {
-      view = next;
+    show(pattern, view) {
+      if (pattern !== scene?.pattern) {
+        tiles.clear();
+      }
+      scene = {pattern, view};
       requestPaint();
     },
     dispose() {
