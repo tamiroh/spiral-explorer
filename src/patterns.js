@@ -1,5 +1,7 @@
 /* @flow strict */
 
+import {primesUpTo} from './math.js';
+
 // -----------------------------------------------------------------------------
 // Common
 // -----------------------------------------------------------------------------
@@ -26,20 +28,6 @@ export const isMarked = (pattern: Pattern, n: number): boolean =>
 // origin, 2 to its right, and winds counterclockwise with y pointing up. Ring
 // k ends at (2k + 1)^2 in the bottom-right corner (k, -k), and each of its
 // four sides holds 2k numbers.
-
-function primesUpTo(limit: number): Array<number> {
-  const primes = [];
-  const composite = new Uint8Array(limit + 1);
-  for (let p = 2; p <= limit; p++) {
-    if (composite[p] === 0) {
-      primes.push(p);
-      for (let multiple = p * p; multiple <= limit; multiple += p) {
-        composite[multiple] = 1;
-      }
-    }
-  }
-  return primes;
-}
 
 const BASE_LIMIT = 2 ** 22;
 const BASE_PRIMES = primesUpTo(BASE_LIMIT);

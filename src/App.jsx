@@ -7,6 +7,7 @@ import type {GridRenderer, View} from './renderer.js';
 
 import {isMarked, PATTERNS} from './patterns.js';
 import styles from './App.module.css';
+import {clamp} from './math.js';
 import {createGridRenderer} from './renderer.js';
 
 // -----------------------------------------------------------------------------
@@ -23,9 +24,6 @@ const MAX_SCALE = 64;
 
 // Keeps every reachable number far below 2^53, where integers stay exact.
 const MAX_COORDINATE = 2 ** 20;
-
-const clamp = (value: number, min: number, max: number): number =>
-  Math.min(max, Math.max(min, value));
 
 const cellAt = (view: View, offset: Offset): Cell => ({
   x: Math.round(view.x + offset.dx / view.scale),
