@@ -1,0 +1,47 @@
+.app {
+  position: relative;
+  height: 100%;
+}
+
+.panel,
+.readout {
+  position: absolute;
+  background: var(--face);
+  box-shadow: var(--raised);
+}
+
+.panel {
+  top: 12px;
+  right: 12px;
+  display: grid;
+  gap: 10px;
+  width: 216px;
+  padding: 12px;
+}
+
+.panel dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0;
+}
+
+.panel dd {
+  margin: 0;
+  text-align: right;
+}
+
+.zoom {
+  display: grid;
+  grid-template-columns: 26px 1fr 26px auto;
+  align-items: center;
+  gap: 4px;
+}
+
+.readout {
+  left: 12px;
+  bottom: 12px;
+  padding: 5px 8px;
+  white-space: pre;
+}

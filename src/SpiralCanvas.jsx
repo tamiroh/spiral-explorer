@@ -5,6 +5,7 @@ import {useEffect, useRef, useState} from 'react';
 import type {Layout} from './layout.js';
 import type {View} from './view.js';
 
+import styles from './SpiralCanvas.module.css';
 import {renderTile, TILE_SIZE} from './tiles.js';
 import {useViewControls} from './useViewControls.js';
 
@@ -192,5 +193,5 @@ export default component SpiralCanvas(
 
   useViewControls(canvasRef, layout, view, onViewChange, onHover);
 
-  return <canvas ref={canvasRef} className="spiral-canvas" />;
+  return <canvas ref={canvasRef} className={styles.canvas} />;
 }

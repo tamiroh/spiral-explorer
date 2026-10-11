@@ -6,6 +6,7 @@ import type {Layout} from './layout.js';
 import type {View} from './view.js';
 
 import {isPrime} from './primes.js';
+import styles from './App.module.css';
 import SpiralCanvas from './SpiralCanvas.jsx';
 import {ulam} from './ulam.js';
 import {CENTER, transformView} from './view.js';
@@ -27,7 +28,7 @@ export default component App() {
   const hoveredCell = hovered == null ? null : layout.position(hovered);
 
   return (
-    <div className="app">
+    <div className={styles.app}>
       <SpiralCanvas
         layout={layout}
         view={view}
@@ -35,7 +36,7 @@ export default component App() {
         onHover={setHovered}
       />
 
-      <aside className="panel">
+      <aside className={styles.panel}>
         <dl>
           <dt>Layout</dt>
           <dd>
@@ -59,7 +60,7 @@ export default component App() {
           <dd>Prime numbers</dd>
         </dl>
 
-        <div className="zoom">
+        <div className={styles.zoom}>
           <button
             type="button"
             aria-label="Zoom out"
@@ -79,7 +80,7 @@ export default component App() {
         </div>
       </aside>
 
-      <footer className="readout">
+      <footer className={styles.readout}>
         {hovered != null && hoveredCell != null
           ? `n = ${hovered}  (${hoveredCell.x}, ${hoveredCell.y})  ${
               isPrime(hovered) ? 'prime' : 'not prime'
