@@ -1,37 +1,35 @@
 /* @flow strict */
 
-// Every prime up to `baseLimit`, in ascending order. These are enough to sieve
-// any range that ends at or below baseLimit^2, and the list grows on demand.
-let baseLimit = 0;
-let basePrimes: Array<number> = [];
-
-function ensureBasePrimes(limit: number): void {
-  if (limit <= baseLimit) {
-    return;
-  }
-  baseLimit = Math.max(limit, 2 * baseLimit, 1024);
-  basePrimes = [];
-  const composite = new Uint8Array(baseLimit + 1);
-  for (let p = 2; p <= baseLimit; p++) {
+function primesUpTo(limit: number): Array<number> {
+  const primes = [];
+  const composite = new Uint8Array(limit + 1);
+  for (let p = 2; p <= limit; p++) {
     if (composite[p] === 0) {
-      basePrimes.push(p);
-      for (let multiple = p * p; multiple <= baseLimit; multiple += p) {
+      primes.push(p);
+      for (let multiple = p * p; multiple <= limit; multiple += p) {
         composite[multiple] = 1;
       }
     }
   }
+  return primes;
 }
 
-// Segmented sieve of Eratosthenes over start..start + length - 1: the result
-// holds 1 at index i when start + i is prime.
+const BASE_LIMIT = 2 ** 22;
+const BASE_PRIMES = primesUpTo(BASE_LIMIT);
+
+
+export const MAX_NUMBER: number = BASE_LIMIT ** 2;
+
 export function primesInRange(start: number, length: number): Uint8Array {
   const end = start + length - 1;
+  if (end > MAX_NUMBER) {
+    throw new RangeError(`Cannot test numbers above ${MAX_NUMBER}`);
+  }
   const flags = new Uint8Array(length).fill(1);
   for (let n = start; n < 2 && n <= end; n++) {
     flags[n - start] = 0;
   }
-  ensureBasePrimes(Math.floor(Math.sqrt(end)) + 1);
-  for (const p of basePrimes) {
+  for (const p of BASE_PRIMES) {
     if (p * p > end) {
       break;
     }
