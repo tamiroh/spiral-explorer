@@ -65,12 +65,6 @@ const ZOOM_STEP = 1.5;
 const WHEEL_ZOOM_RATE = 0.0015;
 
 const KEY_PAN_PX = 48;
-const ARROW_STEPS = new Map<string, Cell>([
-  ['ArrowLeft', {x: -1, y: 0}],
-  ['ArrowRight', {x: 1, y: 0}],
-  ['ArrowUp', {x: 0, y: 1}],
-  ['ArrowDown', {x: 0, y: -1}],
-]);
 
 // -----------------------------------------------------------------------------
 // App
@@ -145,13 +139,18 @@ export default component App() {
     const onPointerLeave = () => setPointer(null);
 
     const onKeyDown = (event: KeyboardEvent) => {
-      const step = ARROW_STEPS.get(event.key);
+      const from: Offset | null = match (event.key) {
+        'ArrowLeft' => {x: -KEY_PAN_PX, y: 0},
+        'ArrowRight' => {x: KEY_PAN_PX, y: 0},
+        'ArrowUp' => {x: 0, y: -KEY_PAN_PX},
+        'ArrowDown' => {x: 0, y: KEY_PAN_PX},
+        _ => null,
+      };
       // Leave the arrow keys to the pattern picker while it has focus.
-      if (step == null || event.target instanceof HTMLSelectElement) {
+      if (from == null || event.target instanceof HTMLSelectElement) {
         return;
       }
       event.preventDefault();
-      const from = {x: step.x * KEY_PAN_PX, y: -step.y * KEY_PAN_PX};
       setView(current => transformView(current, from, CENTER, 1));
     };
 
