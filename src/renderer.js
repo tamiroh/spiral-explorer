@@ -1,5 +1,7 @@
 /* @flow strict */
 
+import {useEffect, useRef} from 'react';
+
 import type {Pattern} from './patterns.js';
 
 // Center of the canvas in cell coordinates, and pixels per cell.
@@ -211,12 +213,12 @@ function paint(
   return missing;
 }
 
-export type GridRenderer = {
+type GridRenderer = {
   readonly show: (pattern: Pattern, view: View) => void,
   readonly dispose: () => void,
 };
 
-export function createGridRenderer(canvas: HTMLCanvasElement): GridRenderer {
+function createGridRenderer(canvas: HTMLCanvasElement): GridRenderer {
   const context = canvas.getContext('2d');
   if (context == null) {
     throw new Error('Canvas 2D is not available');
@@ -268,4 +270,29 @@ export function createGridRenderer(canvas: HTMLCanvasElement): GridRenderer {
       cancelAnimationFrame(frame);
     },
   };
+}
+
+export hook useGridRenderer(
+  canvasRef: {readonly current: HTMLCanvasElement | null},
+  pattern: Pattern,
+  view: View,
+): void {
+  const rendererRef = useRef<GridRenderer | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas == null) {
+      return;
+    }
+    const renderer = createGridRenderer(canvas);
+    rendererRef.current = renderer;
+    return () => {
+      renderer.dispose();
+      rendererRef.current = null;
+    };
+  }, [canvasRef]);
+
+  useEffect(() => {
+    rendererRef.current?.show(pattern, view);
+  }, [pattern, view]);
 }

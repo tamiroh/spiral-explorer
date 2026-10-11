@@ -4,12 +4,12 @@ import {useEffect, useRef, useState} from 'react';
 
 import type {Vector} from './math.js';
 import type {Cell, Pattern} from './patterns.js';
-import type {GridRenderer, View} from './renderer.js';
+import type {View} from './renderer.js';
 
 import {isMarked, PATTERNS} from './patterns.js';
 import styles from './App.module.css';
 import {clamp, distance, midpoint} from './math.js';
-import {createGridRenderer} from './renderer.js';
+import {useGridRenderer} from './renderer.js';
 
 // A screen position in pixels, relative to the center of the viewport.
 type Offset = Vector;
@@ -60,16 +60,13 @@ export default component App() {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const rendererRef = useRef<GridRenderer | null>(null);
+  useGridRenderer(canvasRef, pattern, view);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas == null) {
       return;
     }
-
-    const renderer = createGridRenderer(canvas);
-    rendererRef.current = renderer;
 
     const fromCenter = (event: MouseEvent): Offset => {
       const rect = canvas.getBoundingClientRect();
@@ -152,14 +149,8 @@ export default component App() {
       canvas.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('pointercancel', onPointerUp);
       canvas.removeEventListener('pointerleave', onPointerLeave);
-      renderer.dispose();
-      rendererRef.current = null;
     };
   }, []);
-
-  useEffect(() => {
-    rendererRef.current?.show(pattern, view);
-  }, [pattern, view]);
 
   const zoomBy = (factor: number) =>
     setView(current => transformView(current, CENTER, CENTER, factor));
