@@ -2,12 +2,13 @@
 
 import {useEffect, useRef, useState} from 'react';
 
+import type {Vector} from './math.js';
 import type {Cell, Pattern} from './patterns.js';
 import type {GridRenderer, View} from './renderer.js';
 
 import {isMarked, PATTERNS} from './patterns.js';
 import styles from './App.module.css';
-import {clamp} from './math.js';
+import {clamp, distance, midpoint} from './math.js';
 import {createGridRenderer} from './renderer.js';
 
 // -----------------------------------------------------------------------------
@@ -15,9 +16,9 @@ import {createGridRenderer} from './renderer.js';
 // -----------------------------------------------------------------------------
 
 // A screen position in pixels, relative to the center of the viewport.
-type Offset = {readonly dx: number, readonly dy: number};
+type Offset = Vector;
 
-const CENTER: Offset = {dx: 0, dy: 0};
+const CENTER: Offset = {x: 0, y: 0};
 
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 64;
@@ -26,8 +27,8 @@ const MAX_SCALE = 64;
 const MAX_COORDINATE = 2 ** 20;
 
 const cellAt = (view: View, offset: Offset): Cell => ({
-  x: Math.round(view.x + offset.dx / view.scale),
-  y: Math.round(view.y - offset.dy / view.scale),
+  x: Math.round(view.x + offset.x / view.scale),
+  y: Math.round(view.y - offset.y / view.scale),
 });
 
 // Scales the view by `factor` while moving the cell shown at `from` to `to`,
@@ -41,12 +42,12 @@ const transformView = (
   const scale = clamp(view.scale * factor, MIN_SCALE, MAX_SCALE);
   return {
     x: clamp(
-      view.x + from.dx / view.scale - to.dx / scale,
+      view.x + from.x / view.scale - to.x / scale,
       -MAX_COORDINATE,
       MAX_COORDINATE,
     ),
     y: clamp(
-      view.y - from.dy / view.scale + to.dy / scale,
+      view.y - from.y / view.scale + to.y / scale,
       -MAX_COORDINATE,
       MAX_COORDINATE,
     ),
@@ -70,14 +71,6 @@ const ARROW_STEPS = new Map<string, Cell>([
   ['ArrowUp', {x: 0, y: 1}],
   ['ArrowDown', {x: 0, y: -1}],
 ]);
-
-const midpoint = (a: Offset, b: Offset): Offset => ({
-  dx: (a.dx + b.dx) / 2,
-  dy: (a.dy + b.dy) / 2,
-});
-
-const distance = (a: Offset, b: Offset): number =>
-  Math.hypot(a.dx - b.dx, a.dy - b.dy);
 
 // -----------------------------------------------------------------------------
 // App
@@ -104,8 +97,8 @@ export default component App() {
     const fromCenter = (event: MouseEvent): Offset => {
       const rect = canvas.getBoundingClientRect();
       return {
-        dx: event.clientX - rect.left - rect.width / 2,
-        dy: event.clientY - rect.top - rect.height / 2,
+        x: event.clientX - rect.left - rect.width / 2,
+        y: event.clientY - rect.top - rect.height / 2,
       };
     };
 
@@ -158,7 +151,7 @@ export default component App() {
         return;
       }
       event.preventDefault();
-      const from = {dx: step.x * KEY_PAN_PX, dy: -step.y * KEY_PAN_PX};
+      const from = {x: step.x * KEY_PAN_PX, y: -step.y * KEY_PAN_PX};
       setView(current => transformView(current, from, CENTER, 1));
     };
 
