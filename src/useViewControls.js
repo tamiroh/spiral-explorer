@@ -3,9 +3,9 @@
 import {useEffect, useRef} from 'react';
 
 import type {Cell, Layout} from './layout.js';
-import type {View} from './view.js';
+import type {Offset, View} from './view.js';
 
-import {MAX_SCALE, MIN_SCALE} from './view.js';
+import {CENTER, cellAt, transformView} from './view.js';
 
 const WHEEL_ZOOM_RATE = 0.0015;
 
@@ -18,9 +18,6 @@ const ARROW_STEPS = new Map<string, Cell>([
   ['ArrowDown', {x: 0, y: -1}],
 ]);
 
-// A screen position in pixels, relative to the center of the canvas.
-type Offset = {readonly dx: number, readonly dy: number};
-
 const midpoint = (a: Offset, b: Offset): Offset => ({
   dx: (a.dx + b.dx) / 2,
   dy: (a.dy + b.dy) / 2,
@@ -28,22 +25,6 @@ const midpoint = (a: Offset, b: Offset): Offset => ({
 
 const distance = (a: Offset, b: Offset): number =>
   Math.hypot(a.dx - b.dx, a.dy - b.dy);
-
-// Scales the view by `factor`, as far as the zoom limits allow, while moving
-// the cell shown at `from` to `to`.
-const transformView = (
-  view: View,
-  from: Offset,
-  to: Offset,
-  factor: number,
-): View => {
-  const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, view.scale * factor));
-  return {
-    x: view.x + from.dx / view.scale - to.dx / scale,
-    y: view.y - from.dy / view.scale + to.dy / scale,
-    scale,
-  };
-};
 
 // Wires the pointer, wheel and keyboard input of `canvasRef` to the view:
 // drag or arrow keys to pan, wheel or pinch to zoom, and hover to report the
@@ -114,13 +95,8 @@ export hook useViewControls(
           onViewChange(current => transformView(current, from, to, factor));
         }
       }
-      const {x, y, scale} = viewRef.current;
-      onHover(
-        layout.numberAt(
-          Math.round(x + offset.dx / scale),
-          Math.round(y - offset.dy / scale),
-        ),
-      );
+      const {x, y} = cellAt(viewRef.current, offset);
+      onHover(layout.numberAt(x, y));
     };
 
     const onPointerLeave = () => onHover(null);
@@ -132,11 +108,8 @@ export hook useViewControls(
         return;
       }
       event.preventDefault();
-      onViewChange(current => ({
-        ...current,
-        x: current.x + (step.x * KEY_PAN_PX) / current.scale,
-        y: current.y + (step.y * KEY_PAN_PX) / current.scale,
-      }));
+      const from = {dx: step.x * KEY_PAN_PX, dy: -step.y * KEY_PAN_PX};
+      onViewChange(current => transformView(current, from, CENTER, 1));
     };
 
     canvas.addEventListener('wheel', onWheel, {passive: false});

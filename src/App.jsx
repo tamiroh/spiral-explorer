@@ -1,6 +1,6 @@
 /* @flow strict-local */
 
-import {useCallback, useState} from 'react';
+import {useState} from 'react';
 
 import type {Layout} from './layout.js';
 import type {View} from './view.js';
@@ -8,7 +8,7 @@ import type {View} from './view.js';
 import {isPrime} from './primes.js';
 import SpiralCanvas from './SpiralCanvas.jsx';
 import {ulam} from './ulam.js';
-import {clampView} from './view.js';
+import {CENTER, transformView} from './view.js';
 
 // Every layout offered in the UI; the first one is the default.
 const LAYOUTS: Array<Layout> = [ulam];
@@ -21,13 +21,8 @@ export default component App() {
   const [view, setView] = useState(DEFAULT_VIEW);
   const [hovered, setHovered] = useState<number | null>(null);
 
-  const updateView = useCallback(
-    (update: View => View) => setView(current => clampView(update(current))),
-    [],
-  );
-
   const zoomBy = (factor: number) =>
-    updateView(current => ({...current, scale: current.scale * factor}));
+    setView(current => transformView(current, CENTER, CENTER, factor));
 
   const hoveredCell = hovered == null ? null : layout.position(hovered);
 
@@ -36,7 +31,7 @@ export default component App() {
       <SpiralCanvas
         layout={layout}
         view={view}
-        onViewChange={updateView}
+        onViewChange={setView}
         onHover={setHovered}
       />
 
