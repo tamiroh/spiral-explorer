@@ -2,10 +2,9 @@
 
 import {useEffect, useRef, useState} from 'react';
 
-import type {Cell, Layout} from './layouts.js';
+import type {Cell, Pattern} from './patterns.js';
 
-import {LAYOUTS} from './layouts.js';
-import {isPrime, primesInRange} from './primes.js';
+import {isMarked, PATTERNS} from './patterns.js';
 import styles from './App.module.css';
 
 // -----------------------------------------------------------------------------
@@ -110,24 +109,24 @@ const DIRECTIONS = [
   [1, -1],
 ];
 
-// Marks the prime cells of one tile: the result holds 1 at
+// Finds the marked cells of one tile: the result holds 1 at
 // row * TILE_SIZE + column, with row 0 at the lowest y.
 //
 // Numbers are tested a range at a time rather than cell by cell, so the tile
 // is first split into runs: straight lines of cells that hold consecutive
 // numbers.
-function tilePrimes(layout: Layout, tileX: number, tileY: number): Uint8Array {
+function tileMarks(pattern: Pattern, tileX: number, tileY: number): Uint8Array {
   const numbers = new Float64Array(TILE_SIZE * TILE_SIZE);
   for (let row = 0; row < TILE_SIZE; row++) {
     for (let column = 0; column < TILE_SIZE; column++) {
-      numbers[row * TILE_SIZE + column] = layout.numberAt(
+      numbers[row * TILE_SIZE + column] = pattern.numberAt(
         tileX * TILE_SIZE + column,
         tileY * TILE_SIZE + row,
       );
     }
   }
 
-  const primes = new Uint8Array(numbers.length);
+  const marks = new Uint8Array(numbers.length);
   const assigned = new Uint8Array(numbers.length);
   // Whether the cell holds `n` and is not yet part of a run.
   const isFree = (column: number, row: number, n: number) =>
@@ -167,26 +166,26 @@ function tilePrimes(layout: Layout, tileX: number, tileY: number): Uint8Array {
         after++;
       }
 
-      const flags = primesInRange(n - before, before + after + 1);
+      const flags = pattern.inRange(n - before, before + after + 1);
       for (let i = -before; i <= after; i++) {
         const cell = (row + i * dy) * TILE_SIZE + column + i * dx;
         assigned[cell] = 1;
-        primes[cell] = flags[i + before];
+        marks[cell] = flags[i + before];
       }
     }
   }
-  return primes;
+  return marks;
 }
 
 // Renders one tile as a TILE_SIZE-pixel bitmap with one opaque black pixel per
-// prime cell and everything else transparent. Row 0 is the highest y.
+// marked cell and everything else transparent. Row 0 is the highest y.
 function renderTile(
-  layout: Layout,
+  pattern: Pattern,
   tileX: number,
   tileY: number,
 ): HTMLCanvasElement {
   const image = new ImageData(TILE_SIZE, TILE_SIZE);
-  tilePrimes(layout, tileX, tileY).forEach((flag, cell) => {
+  tileMarks(pattern, tileX, tileY).forEach((flag, cell) => {
     if (flag === 1) {
       const column = cell % TILE_SIZE;
       const row = TILE_SIZE - 1 - Math.floor(cell / TILE_SIZE);
@@ -323,7 +322,7 @@ function paint(
 // -----------------------------------------------------------------------------
 
 export default component App() {
-  const [layout, setLayout] = useState<Layout>(LAYOUTS[0]);
+  const [pattern, setPattern] = useState<Pattern>(PATTERNS[0]);
   const [view, setView] = useState(DEFAULT_VIEW);
   const [hovered, setHovered] = useState<number | null>(null);
 
@@ -346,7 +345,7 @@ export default component App() {
   }, []);
 
   // The paint loop outlives view changes, so tiles keep loading while the
-  // view is still moving. A new layout starts over with an empty tile cache.
+  // view is still moving. A new pattern starts over with an empty tile cache.
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
@@ -370,7 +369,7 @@ export default component App() {
       }
       const deadline = performance.now() + TILE_BUDGET_MS;
       for (const {tileX, tileY} of missing) {
-        tiles.set(tileKey(tileX, tileY), renderTile(layout, tileX, tileY));
+        tiles.set(tileKey(tileX, tileY), renderTile(pattern, tileX, tileY));
         if (performance.now() >= deadline) {
           break;
         }
@@ -383,12 +382,12 @@ export default component App() {
       cancelAnimationFrame(frame);
       requestPaintRef.current = () => {};
     };
-  }, [layout]);
+  }, [pattern]);
 
   useEffect(() => {
     viewRef.current = view;
     requestPaintRef.current();
-  }, [view, resizes, layout]);
+  }, [view, resizes, pattern]);
 
   // Pointer, wheel and keyboard input: drag or arrow keys to pan, wheel or
   // pinch to zoom, and hover to report the number under the pointer.
@@ -446,14 +445,14 @@ export default component App() {
         }
       }
       const {x, y} = cellAt(viewRef.current, offset);
-      setHovered(layout.numberAt(x, y));
+      setHovered(pattern.numberAt(x, y));
     };
 
     const onPointerLeave = () => setHovered(null);
 
     const onKeyDown = (event: KeyboardEvent) => {
       const step = ARROW_STEPS.get(event.key);
-      // Leave the arrow keys to the layout picker while it has focus.
+      // Leave the arrow keys to the pattern picker while it has focus.
       if (step == null || event.target instanceof HTMLSelectElement) {
         return;
       }
@@ -478,12 +477,12 @@ export default component App() {
       canvas.removeEventListener('pointercancel', onPointerUp);
       canvas.removeEventListener('pointerleave', onPointerLeave);
     };
-  }, [layout]);
+  }, [pattern]);
 
   const zoomBy = (factor: number) =>
     setView(current => transformView(current, CENTER, CENTER, factor));
 
-  const hoveredCell = hovered == null ? null : layout.position(hovered);
+  const hoveredCell = hovered == null ? null : pattern.position(hovered);
 
   return (
     <div className={styles.app}>
@@ -491,26 +490,24 @@ export default component App() {
 
       <aside className={styles.panel}>
         <dl>
-          <dt>Layout</dt>
+          <dt>Pattern</dt>
           <dd>
             <select
-              aria-label="Layout"
-              value={layout.id}
+              aria-label="Pattern"
+              value={pattern.id}
               onChange={event => {
                 const {value} = event.currentTarget;
-                setLayout(
-                  current => LAYOUTS.find(l => l.id === value) ?? current,
+                setPattern(
+                  current => PATTERNS.find(l => l.id === value) ?? current,
                 );
               }}>
-              {LAYOUTS.map(({id, name}) => (
+              {PATTERNS.map(({id, name}) => (
                 <option key={id} value={id}>
                   {name}
                 </option>
               ))}
             </select>
           </dd>
-          <dt>Highlight</dt>
-          <dd>Prime numbers</dd>
         </dl>
 
         <div className={styles.zoom}>
@@ -536,7 +533,9 @@ export default component App() {
       <footer className={styles.readout}>
         {hovered != null && hoveredCell != null
           ? `n = ${hovered}  (${hoveredCell.x}, ${hoveredCell.y})  ${
-              isPrime(hovered) ? 'prime' : 'not prime'
+              isMarked(pattern, hovered)
+                ? pattern.label
+                : `not ${pattern.label}`
             }`
           : 'Drag or arrow keys to pan · Scroll or pinch to zoom'}
       </footer>
