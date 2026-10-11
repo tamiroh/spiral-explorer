@@ -88,12 +88,10 @@ const distance = (a: Offset, b: Offset): number =>
 export default component App() {
   const [pattern, setPattern] = useState<Pattern>(PATTERNS[0]);
   const [view, setView] = useState(DEFAULT_VIEW);
-  const [hovered, setHovered] = useState<number | null>(null);
+  const [pointer, setPointer] = useState<Offset | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Lets the input handlers read the current view.
-  const viewRef = useRef(view);
   const rendererRef = useRef<GridRenderer | null>(null);
 
   useEffect(() => {
@@ -101,7 +99,7 @@ export default component App() {
     if (canvas == null) {
       return;
     }
-    const renderer = createGridRenderer(canvas, pattern, viewRef.current);
+    const renderer = createGridRenderer(canvas, pattern);
     rendererRef.current = renderer;
     return () => {
       renderer.dispose();
@@ -110,7 +108,6 @@ export default component App() {
   }, [pattern]);
 
   useEffect(() => {
-    viewRef.current = view;
     rendererRef.current?.setView(view);
   }, [view, pattern]);
 
@@ -165,11 +162,10 @@ export default component App() {
           setView(current => transformView(current, from, to, factor));
         }
       }
-      const {x, y} = cellAt(viewRef.current, offset);
-      setHovered(pattern.numberAt(x, y));
+      setPointer(offset);
     };
 
-    const onPointerLeave = () => setHovered(null);
+    const onPointerLeave = () => setPointer(null);
 
     const onKeyDown = (event: KeyboardEvent) => {
       const step = ARROW_STEPS.get(event.key);
@@ -198,12 +194,14 @@ export default component App() {
       canvas.removeEventListener('pointercancel', onPointerUp);
       canvas.removeEventListener('pointerleave', onPointerLeave);
     };
-  }, [pattern]);
+  }, []);
 
   const zoomBy = (factor: number) =>
     setView(current => transformView(current, CENTER, CENTER, factor));
 
-  const hoveredCell = hovered == null ? null : pattern.position(hovered);
+  const hoveredCell = pointer == null ? null : cellAt(view, pointer);
+  const hovered =
+    hoveredCell == null ? null : pattern.numberAt(hoveredCell.x, hoveredCell.y);
 
   return (
     <div className={styles.app}>

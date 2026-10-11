@@ -235,14 +235,14 @@ export type GridRenderer = {
 export function createGridRenderer(
   canvas: HTMLCanvasElement,
   pattern: Pattern,
-  initialView: View,
 ): GridRenderer {
   const context = canvas.getContext('2d');
   if (context == null) {
     throw new Error('Canvas 2D is not available');
   }
   const tiles: TileCache = new Map();
-  let view = initialView;
+  // Nothing is painted until the first `setView`.
+  let view: View | null = null;
   let frame = 0;
 
   const requestPaint = () => {
@@ -253,7 +253,7 @@ export function createGridRenderer(
 
   const tick = () => {
     frame = 0;
-    const missing = paint(canvas, context, view, tiles);
+    const missing = view == null ? [] : paint(canvas, context, view, tiles);
     if (missing.length === 0) {
       return;
     }
