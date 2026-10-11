@@ -2,7 +2,7 @@
 
 import {useEffect, useRef} from 'react';
 
-import type {Cell, Layout} from './layout.js';
+import type {Cell, Layout} from './layouts.js';
 import type {Offset, View} from './view.js';
 
 import {CENTER, cellAt, transformView} from './view.js';

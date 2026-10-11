@@ -1,6 +1,6 @@
 /* @flow strict */
 
-import type {Layout} from './layout.js';
+import type {Layout} from './layouts.js';
 
 import {primesInRange} from './primes.js';
 

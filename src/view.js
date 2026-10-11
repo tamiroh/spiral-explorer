@@ -1,6 +1,6 @@
 /* @flow strict */
 
-import type {Cell} from './layout.js';
+import type {Cell} from './layouts.js';
 
 // Center of the viewport in cell coordinates, and pixels per cell.
 export type View = {
