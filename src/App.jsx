@@ -99,23 +99,9 @@ export default component App() {
     if (canvas == null) {
       return;
     }
+
     const renderer = createGridRenderer(canvas);
     rendererRef.current = renderer;
-    return () => {
-      renderer.dispose();
-      rendererRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    rendererRef.current?.show(pattern, view);
-  }, [pattern, view]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas == null) {
-      return;
-    }
 
     const fromCenter = (event: MouseEvent): Offset => {
       const rect = canvas.getBoundingClientRect();
@@ -193,8 +179,14 @@ export default component App() {
       canvas.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('pointercancel', onPointerUp);
       canvas.removeEventListener('pointerleave', onPointerLeave);
+      renderer.dispose();
+      rendererRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    rendererRef.current?.show(pattern, view);
+  }, [pattern, view]);
 
   const zoomBy = (factor: number) =>
     setView(current => transformView(current, CENTER, CENTER, factor));
