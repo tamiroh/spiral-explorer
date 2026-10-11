@@ -6,8 +6,6 @@
 
 export type Cell = {readonly x: number, readonly y: number};
 
-// A way of placing the positive integers on the cells of a square grid, y
-// pointing up, together with the numbers it marks.
 export type Pattern = {
   readonly id: string,
   readonly name: string,
