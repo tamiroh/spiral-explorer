@@ -3,5 +3,5 @@
   "bracketSpacing": false,
   "bracketSameLine": true,
   "arrowParens": "avoid",
-  "overrides": [{"files": ["*.js", "*.jsx"], "options": {"parser": "flow"}}]
+  "plugins": ["@prettier/plugin-hermes"]
 }
