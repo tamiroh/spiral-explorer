@@ -12,10 +12,12 @@ const compat = new FlatCompat({baseDirectory: import.meta.dirname});
 
 export default defineConfig([
   globalIgnores(['dist/', 'flow-typed/']),
-  js.configs.recommended,
-  compat.extends('plugin:ft-flow/recommended'),
   {
     files: ['**/*.{js,jsx}'],
+    extends: [
+      js.configs.recommended,
+      compat.extends('plugin:ft-flow/recommended'),
+    ],
     languageOptions: {
       parser: flowParser,
       sourceType: 'module',
