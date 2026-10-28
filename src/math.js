@@ -3,12 +3,14 @@
 export const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
 
-export type Vector = {readonly x: number, readonly y: number};
+type Components = {readonly x: number, readonly y: number};
 
-export const midpoint = (a: Vector, b: Vector): Vector => ({
-  x: (a.x + b.x) / 2,
-  y: (a.y + b.y) / 2,
-});
+export opaque type Vector: Components = Components;
+
+export const vector = (x: number, y: number): Vector => ({x, y});
+
+export const midpoint = (a: Vector, b: Vector): Vector =>
+  vector((a.x + b.x) / 2, (a.y + b.y) / 2);
 
 export const distance = (a: Vector, b: Vector): number =>
   Math.hypot(a.x - b.x, a.y - b.y);

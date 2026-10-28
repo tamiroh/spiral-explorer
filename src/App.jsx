@@ -6,15 +6,12 @@ import type {Vector} from './math.js';
 import type {Cell, Pattern} from './patterns.js';
 import type {View} from './renderer.js';
 
-import {isMarked, PATTERNS} from './patterns.js';
+import {cell, isMarked, PATTERNS} from './patterns.js';
 import styles from './App.module.css';
-import {clamp, distance, midpoint} from './math.js';
+import {clamp, distance, midpoint, vector} from './math.js';
 import {useGridRenderer} from './renderer.js';
 
-// A screen position in pixels, relative to the center of the viewport.
-type Offset = Vector;
-
-const CENTER: Offset = {x: 0, y: 0};
+const CENTER: Vector = vector(0, 0);
 const DEFAULT_VIEW: View = {x: 0, y: 0, scale: 3};
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 64;
@@ -24,17 +21,18 @@ const ZOOM_STEP = 1.5;
 const WHEEL_ZOOM_RATE = 0.0015;
 const KEY_PAN_PX = 48;
 
-const cellAt = (view: View, offset: Offset): Cell => ({
-  x: Math.round(view.x + offset.x / view.scale),
-  y: Math.round(view.y - offset.y / view.scale),
-});
+const cellAt = (view: View, offset: Vector): Cell =>
+  cell(
+    Math.round(view.x + offset.x / view.scale),
+    Math.round(view.y - offset.y / view.scale),
+  );
 
 // Scales the view by `factor` while moving the cell shown at `from` to `to`,
 // within the zoom and coordinate limits.
 const transformView = (
   view: View,
-  from: Offset,
-  to: Offset,
+  from: Vector,
+  to: Vector,
   factor: number,
 ): View => {
   const scale = clamp(view.scale * factor, MIN_SCALE, MAX_SCALE);
@@ -56,7 +54,7 @@ const transformView = (
 export default component App() {
   const [pattern, setPattern] = useState<Pattern>(PATTERNS[0]);
   const [view, setView] = useState(DEFAULT_VIEW);
-  const [pointer, setPointer] = useState<Offset | null>(null);
+  const [pointer, setPointer] = useState<Vector | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -68,15 +66,15 @@ export default component App() {
       return;
     }
 
-    const fromCenter = (event: MouseEvent): Offset => {
+    const fromCenter = (event: MouseEvent): Vector => {
       const rect = canvas.getBoundingClientRect();
-      return {
-        x: event.clientX - rect.left - rect.width / 2,
-        y: event.clientY - rect.top - rect.height / 2,
-      };
+      return vector(
+        event.clientX - rect.left - rect.width / 2,
+        event.clientY - rect.top - rect.height / 2,
+      );
     };
 
-    const pressed = new Map<number, Offset>();
+    const pressed = new Map<number, Vector>();
 
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
@@ -119,11 +117,11 @@ export default component App() {
     const onPointerLeave = () => setPointer(null);
 
     const onKeyDown = (event: KeyboardEvent) => {
-      const from: Offset | null = match (event.key) {
-        'ArrowLeft' => {x: -KEY_PAN_PX, y: 0},
-        'ArrowRight' => {x: KEY_PAN_PX, y: 0},
-        'ArrowUp' => {x: 0, y: -KEY_PAN_PX},
-        'ArrowDown' => {x: 0, y: KEY_PAN_PX},
+      const from: Vector | null = match (event.key) {
+        'ArrowLeft' => vector(-KEY_PAN_PX, 0),
+        'ArrowRight' => vector(KEY_PAN_PX, 0),
+        'ArrowUp' => vector(0, -KEY_PAN_PX),
+        'ArrowDown' => vector(0, KEY_PAN_PX),
         _ => null,
       };
       // Leave the arrow keys to the pattern picker while it has focus.
@@ -156,8 +154,7 @@ export default component App() {
     setView(current => transformView(current, CENTER, CENTER, factor));
 
   const hoveredCell = pointer == null ? null : cellAt(view, pointer);
-  const hovered =
-    hoveredCell == null ? null : pattern.numberAt(hoveredCell.x, hoveredCell.y);
+  const hovered = hoveredCell == null ? null : pattern.numberAt(hoveredCell);
 
   return (
     <div className={styles.app}>

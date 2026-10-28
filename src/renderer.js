@@ -1,6 +1,7 @@
 /* @flow strict */
 
 import {useEffect, useRef} from 'react';
+import {cell} from './patterns.js';
 
 import type {Pattern} from './patterns.js';
 
@@ -38,8 +39,7 @@ function tileMarks(pattern: Pattern, tileX: number, tileY: number): Uint8Array {
   for (let row = 0; row < TILE_SIZE; row++) {
     for (let column = 0; column < TILE_SIZE; column++) {
       numbers[row * TILE_SIZE + column] = pattern.numberAt(
-        tileX * TILE_SIZE + column,
-        tileY * TILE_SIZE + row,
+        cell(tileX * TILE_SIZE + column, tileY * TILE_SIZE + row),
       );
     }
   }

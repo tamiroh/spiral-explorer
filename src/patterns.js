@@ -6,14 +6,18 @@ import {primesUpTo} from './math.js';
 // Common
 // -----------------------------------------------------------------------------
 
-export type Cell = {readonly x: number, readonly y: number};
+type Coordinates = {readonly x: number, readonly y: number};
+
+export opaque type Cell: Coordinates = Coordinates;
+
+export const cell = (x: number, y: number): Cell => ({x, y});
 
 export type Pattern = {
   readonly id: string,
   readonly name: string,
   readonly label: string,
   readonly position: (n: number) => Cell,
-  readonly numberAt: (x: number, y: number) => number,
+  readonly numberAt: Cell => number,
   readonly marks: (start: number, length: number) => Uint8Array,
 };
 
@@ -44,18 +48,18 @@ const ulam: Pattern = {
     const side = 2 * k;
     const offset = (side + 1) ** 2 - n;
     if (offset <= side) {
-      return {x: k - offset, y: -k};
+      return cell(k - offset, -k);
     }
     if (offset <= 2 * side) {
-      return {x: -k, y: offset - side - k};
+      return cell(-k, offset - side - k);
     }
     if (offset <= 3 * side) {
-      return {x: offset - 2 * side - k, y: k};
+      return cell(offset - 2 * side - k, k);
     }
-    return {x: k, y: k - (offset - 3 * side)};
+    return cell(k, k - (offset - 3 * side));
   },
 
-  numberAt(x, y) {
+  numberAt({x, y}) {
     const k = Math.max(Math.abs(x), Math.abs(y));
     const side = 2 * k;
     const last = (side + 1) ** 2;
