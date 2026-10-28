@@ -2,16 +2,16 @@
 
 import {useEffect, useRef, useState} from 'react';
 
-import type {Vector} from './math.js';
+import type {Point} from './math.js';
 import type {Cell, Pattern} from './patterns.js';
 import type {View} from './renderer.js';
 
 import {cell, isMarked, PATTERNS} from './patterns.js';
 import styles from './App.module.css';
-import {clamp, distance, midpoint, vector} from './math.js';
+import {clamp, distance, midpoint, point} from './math.js';
 import {useGridRenderer} from './renderer.js';
 
-const CENTER: Vector = vector(0, 0);
+const CENTER: Point = point(0, 0);
 const DEFAULT_VIEW: View = {x: 0, y: 0, scale: 3};
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 64;
@@ -21,18 +21,18 @@ const ZOOM_STEP = 1.5;
 const WHEEL_ZOOM_RATE = 0.0015;
 const KEY_PAN_PX = 48;
 
-const cellAt = (view: View, offset: Vector): Cell =>
+const cellAt = (view: View, point: Point): Cell =>
   cell(
-    Math.round(view.x + offset.x / view.scale),
-    Math.round(view.y - offset.y / view.scale),
+    Math.round(view.x + point.x / view.scale),
+    Math.round(view.y - point.y / view.scale),
   );
 
 // Scales the view by `factor` while moving the cell shown at `from` to `to`,
 // within the zoom and coordinate limits.
 const transformView = (
   view: View,
-  from: Vector,
-  to: Vector,
+  from: Point,
+  to: Point,
   factor: number,
 ): View => {
   const scale = clamp(view.scale * factor, MIN_SCALE, MAX_SCALE);
@@ -54,7 +54,7 @@ const transformView = (
 export default component App() {
   const [pattern, setPattern] = useState<Pattern>(PATTERNS[0]);
   const [view, setView] = useState(DEFAULT_VIEW);
-  const [pointer, setPointer] = useState<Vector | null>(null);
+  const [pointer, setPointer] = useState<Point | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -66,21 +66,21 @@ export default component App() {
       return;
     }
 
-    const fromCenter = (event: MouseEvent): Vector => {
+    const fromCenter = (event: MouseEvent): Point => {
       const rect = canvas.getBoundingClientRect();
-      return vector(
+      return point(
         event.clientX - rect.left - rect.width / 2,
         event.clientY - rect.top - rect.height / 2,
       );
     };
 
-    const pressed = new Map<number, Vector>();
+    const pressed = new Map<number, Point>();
 
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
-      const offset = fromCenter(event);
+      const position = fromCenter(event);
       const factor = Math.exp(-event.deltaY * WHEEL_ZOOM_RATE);
-      setView(current => transformView(current, offset, offset, factor));
+      setView(current => transformView(current, position, position, factor));
     };
 
     const onPointerDown = (event: PointerEvent) => {
@@ -94,34 +94,34 @@ export default component App() {
 
     // One pointer drags the view; two pinch it around their midpoint.
     const onPointerMove = (event: PointerEvent) => {
-      const offset = fromCenter(event);
+      const position = fromCenter(event);
       const previous = pressed.get(event.pointerId);
       if (previous != null) {
-        pressed.set(event.pointerId, offset);
+        pressed.set(event.pointerId, position);
         const [other] = [...pressed]
           .filter(([pointerId]) => pointerId !== event.pointerId)
           .map(([, position]) => position);
         if (other == null) {
-          setView(current => transformView(current, previous, offset, 1));
+          setView(current => transformView(current, previous, position, 1));
         } else if (pressed.size === 2) {
           const from = midpoint(previous, other);
-          const to = midpoint(offset, other);
+          const to = midpoint(position, other);
           const factor =
-            distance(offset, other) / Math.max(distance(previous, other), 1);
+            distance(position, other) / Math.max(distance(previous, other), 1);
           setView(current => transformView(current, from, to, factor));
         }
       }
-      setPointer(offset);
+      setPointer(position);
     };
 
     const onPointerLeave = () => setPointer(null);
 
     const onKeyDown = (event: KeyboardEvent) => {
-      const from: Vector | null = match (event.key) {
-        'ArrowLeft' => vector(-KEY_PAN_PX, 0),
-        'ArrowRight' => vector(KEY_PAN_PX, 0),
-        'ArrowUp' => vector(0, -KEY_PAN_PX),
-        'ArrowDown' => vector(0, KEY_PAN_PX),
+      const from: Point | null = match (event.key) {
+        'ArrowLeft' => point(-KEY_PAN_PX, 0),
+        'ArrowRight' => point(KEY_PAN_PX, 0),
+        'ArrowUp' => point(0, -KEY_PAN_PX),
+        'ArrowDown' => point(0, KEY_PAN_PX),
         _ => null,
       };
       // Leave the arrow keys to the pattern picker while it has focus.

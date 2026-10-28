@@ -3,16 +3,21 @@
 export const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
 
-type Components = {readonly x: number, readonly y: number};
+type Coordinates = {readonly x: number, readonly y: number};
 
-export opaque type Vector: Components = Components;
+export opaque type Point: Coordinates = Coordinates;
 
-export const vector = (x: number, y: number): Vector => ({x, y});
+export function point(x: number, y: number): Point {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    throw new RangeError('Point coordinates must be finite numbers');
+  }
+  return {x, y};
+}
 
-export const midpoint = (a: Vector, b: Vector): Vector =>
-  vector((a.x + b.x) / 2, (a.y + b.y) / 2);
+export const midpoint = (a: Point, b: Point): Point =>
+  point((a.x + b.x) / 2, (a.y + b.y) / 2);
 
-export const distance = (a: Vector, b: Vector): number =>
+export const distance = (a: Point, b: Point): number =>
   Math.hypot(a.x - b.x, a.y - b.y);
 
 export function primesUpTo(limit: number): Array<number> {
