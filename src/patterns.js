@@ -10,7 +10,12 @@ type Coordinates = {readonly x: number, readonly y: number};
 
 export opaque type Cell: Coordinates = Coordinates;
 
-export const cell = (x: number, y: number): Cell => ({x, y});
+export function cell(x: number, y: number): Cell {
+  if (!Number.isSafeInteger(x) || !Number.isSafeInteger(y)) {
+    throw new RangeError('Cell coordinates must be safe integers');
+  }
+  return {x, y};
+}
 
 export type Pattern = {
   readonly id: string,
